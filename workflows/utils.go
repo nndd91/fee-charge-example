@@ -1,6 +1,8 @@
 package workflows
 
 import (
+	"encoding/json"
+	"fmt"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
@@ -76,4 +78,18 @@ func ExecuteWithApproval(ctx workflow.Context, valuePtr interface{}, signalName 
 			return nil // Activity completed successfully
 		}
 	}
+}
+
+func upsertFeeData(ctx workflow.Context, feeData Result) error {
+	b, err := json.Marshal(feeData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal FeeData into bytes: %v", err)
+	}
+
+	if err = workflow.UpsertSearchAttributes(ctx, map[string]interface{}{
+		"FeeData": string(b),
+	}); err != nil {
+		return fmt.Errorf("failed to update FeeData search attr: %v", err)
+	}
+	return nil
 }

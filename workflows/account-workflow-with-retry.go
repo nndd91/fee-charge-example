@@ -37,10 +37,14 @@ func AccountFeeChargeWorkflowWithRetry(ctx workflow.Context, batchID string, acc
 		return err
 	}
 
+	err = upsertFeeData(ctx, feeChargeResult)
+
 	err = ExecuteWithApproval(ctx, &feeChargeResult, "approveFeeCharge", ChargeFee, accountID, month, year)
 	if err != nil {
 		return err
 	}
+
+	err = upsertFeeData(ctx, feeChargeResult)
 
 	var statementId uuid.UUID
 	err = ExecuteWithApproval(ctx, &statementId, "approveGenerateStatement", GenerateStatement, accountID, feeChargeResult)
